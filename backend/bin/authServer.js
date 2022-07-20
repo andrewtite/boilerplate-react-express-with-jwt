@@ -5,22 +5,24 @@ import {validateToken} from './tokenGeneration.js';
 import {getConnection} from './db.js';
 import bcrypt from 'bcrypt';
 import {generateAccessToken, generateRefreshToken} from './tokenGeneration.js';
+import {IpFilter} from 'express-ipfilter';
 
 dotenv.config();
 const app = express();
+app.use(cors());
+let refreshTokens = [];
 
 // this middleware will allow us to pull req.body.<params>
 app.use(express.json());
-
-// app.use(cors({
-//     origin: ['https://www.section.io', 'https://www.google.com/']
-// }));
-let refreshTokens = [];
 
 // get API Server port number from .env file
 // API Server is run of different port from Auth Server
 const PORT = process.env.TOKEN_SERVER_PORT;
 const DB_PREFIX = process.env.DB_PREFIX || '';
+
+// Whitelist
+const validIps = ['::12', '127.0.0.1']; // Put your IP whitelist in this array
+app.use(IpFilter(validIps));
 
 // login endpoint
 app.post('/api/signin', async (req, res) => {

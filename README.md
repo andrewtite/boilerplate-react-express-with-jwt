@@ -22,9 +22,12 @@ To install the required dependencies:
 
 * Clone git repo
 * Make sure latest node, npm, and yarn are installed
-* From the command line: `npm i`
+* Install required node packages from the command line: `npm install`
 * Create a `.env` file in `./frontend` with the required environment variables. (see example below)
 * Create a `.env` file in `./backend` with the required environment variables. (see example below)
+* Use `database.sql` to create MySQL database tables with default public API username and password.
+* Start the Express.js backend server from the command line: `npm "start backend"`
+* Start the React frontend server from the command line: `npm "start frontend"`
 
 ### Environment Variables .env file
 
@@ -40,14 +43,39 @@ PORT = The port you would like the React frontend to run on.
 
 Create a `.env` file in backend directory.
 
-    TOKEN_SERVER_PORT = 5000
-    PORT = 5001
-    ACCESS_TOKEN_SECRET = `USE YOUR OWN TOKEN UNIQUE TO YOUR WEBSITE`
-    REFRESH_TOKEN_SECRET = `USE YOUR OWN TOKEN UNIQUE TO YOUR WEBSITE`
+   ```
+   TOKEN_SERVER_PORT = 5000
+   PORT = 5001
+
+   ACCESS_TOKEN_EXPIRY = 50m
+   REFRESH_TOKEN_EXPIRY = 60m
+   
+   DB_HOST = [ENTER_DB_HOST_HERE]
+   DB_PORT = [ENTER_DB_PORT_HERE]
+   DB_USER = [ENTER_DB_USERNAME_HERE]
+   DB_PASSWORD = [ENTER_DB_PASSWORD_HERE]
+   DB_DATABASE = [ENTER_DB_NAME_HERE]
+   DB_PREFIX = gt_
+   
+   ACCESS_TOKEN_SECRET = `USE YOUR OWN TOKEN UNIQUE TO YOUR WEBSITE`
+   REFRESH_TOKEN_SECRET = `USE YOUR OWN TOKEN UNIQUE TO YOUR WEBSITE`
+   ```
 
 TOKEN_SERVER_PORT = The port you would like the authorization server to run on.
 
 PORT = The port you would like the API server to run on.
+
+DB_HOST = The host of your MySQL database server. 
+
+DB_PORT = The port of your MySQL database server. (usually 3306)
+
+DB_USER = Username to access your MySQL database server.
+
+DB_PASSWORD = Password to access your MySQL database server.
+
+DB_DATABASE = The name of the database you would like to use.
+
+DB_PREFIX = If you would like to use a prefix in the table names used in your database, please enter it here.
 
 ACCESS_TOKEN_SECRET = Create a secret string unique to your website used in the generation of access tokens. If you have
 multiple servers running, such as in an Autoscaling Group, please ensure this secret is the same on all servers.

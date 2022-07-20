@@ -1,11 +1,12 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
+import {IpFilter} from 'express-ipfilter';
 import {validateToken} from './tokenGeneration.js';
 // import {getConnection} from './db.js';
 // import {reject} from 'bcrypt/promises.js';
-import * as Errors from './error.js';
-import {Forbidden} from './error.js';
+// import * as Errors from './error.js';
+// import {BadRequest, Forbidden, Unauthorized} from './error.js';
 
 dotenv.config();
 const app = express();
@@ -17,30 +18,15 @@ app.use(express.json());
 const PORT = process.env.PORT;
 // const DB_PREFIX = process.env.DB_PREFIX || '';
 
+// Whitelist
+const validIps = ['::12', '127.0.0.1']; // Put your IP whitelist in this array
+app.use(IpFilter(validIps));
+
 app.listen(PORT, () => {
     console.log(`API server running on running on port ${PORT}...`);
 });
 
 app.use(cors());
-
-// Whitelist
-app.use((req, res, next) => {
-    let validIps = ['::12', '127.0.0.1']; // Put your IP whitelist in this array
-
-    console.log('req.connection', req.connection.remoteAddress);
-    if(validIps.includes(req.connection.remoteAddress)){
-        // IP is ok, so go on
-        console.log("IP ok");
-        next();
-    }
-    else{
-        // Invalid ip
-        console.log("Bad IP: " + req.connection.remoteAddress);
-        const err = new Error("Bad IP: " + req.connection.remoteAddress);
-
-        next(err);
-    }
-});
 
 // Routes
 app.get('/test', validateToken, (req, res) => {
@@ -88,8 +74,8 @@ app.use((err, req, res, next) => {
     res.status(err.status || 500);
     const errRes = {
         "success": false,
-        "message": err ? JSON.stringify(err) : 'Error occurred. Please check your request.',
-        "error_code": 1308,
+        "message": err.name ? err.name : 'Error occurred. Please check your request.',
+        "error_code": err.code ? err.code : 1308, // just defaulting to 1308 for now
         "request": {
             "method": req.method,
             "url": req.url,
