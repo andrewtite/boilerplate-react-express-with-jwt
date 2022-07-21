@@ -13,6 +13,8 @@ const app = express();
 
 app.use(express.json());
 
+app.use(cors());
+
 // get API Server port number from .env file
 // API Server is run of different port from Auth Server
 const PORT = process.env.PORT;
@@ -25,8 +27,6 @@ app.use(IpFilter(validIps));
 app.listen(PORT, () => {
     console.log(`API server running on running on port ${PORT}...`);
 });
-
-app.use(cors());
 
 // Routes
 app.get('/test', validateToken, (req, res) => {
