@@ -25,9 +25,6 @@ const DB_PREFIX = process.env.DB_PREFIX || '';
 
 // login endpoint
 app.post('/api/signin', async (req, res) => {
-    const saltRounds = 10;
-    let password = 'test';
-
     const dbConnect = async () => {
         return await getConnection();
     };
@@ -90,7 +87,7 @@ app.post('/api/refreshToken', (req, res) => {
 });
 
 // retire refresh token on logout
-app.delete('/api/logout', (req, res) => {
+app.delete('/api/logout', validateToken, (req, res) => {
     refreshTokens = refreshTokens.filter(c => c !== req.body.token);
     res.status(204).send('Logged out!');
 });
@@ -106,12 +103,10 @@ app.delete('/api/logout', (req, res) => {
 //      -ACCESS_TOKEN_SIGNIN = Same ACCESS_TOKEN_SIGNIN as backend environment variable (.env file)
 //      -REACT_APP_API_USER = Username provided to you by /signingen API call from API tool on your computer.
 //      -REACT_APP_API_PASS = Password provided to you by /signingen API call from API tool on your computer.
-
 app.get('/api/signinSaltGen', validateToken, async (req, res) => {
     // Get current Environment Variables
     const getEnvironmentVars = async () => {
-        const envVars = fs.readFileSync("./.env", {encoding: 'utf8'}).split(os.EOL);
-        return envVars;
+        return fs.readFileSync("./.env", {encoding: 'utf8'}).split(os.EOL);
     };
 
     // Update Environment Variable in .env file
@@ -146,9 +141,11 @@ app.get('/api/signinSaltGen', validateToken, async (req, res) => {
     // Salt
     let saltRounds = parseInt(process.env.SALT_ROUNDS);
 
-    const salt = await bcrypt.genSalt(saltRounds);
+    const salt = process.env.ACCESS_TOKEN_SIGNIN_SALT ? process.env.ACCESS_TOKEN_SIGNIN_SALT
+        : await bcrypt.genSalt(saltRounds);
     await updateEnvFile('ACCESS_TOKEN_SIGNIN_SALT', salt);
 
+    // Username and Final Response
     const apiUsername = process.env.REACT_APP_API_USER ? process.env.REACT_APP_API_USER : 'apiPublic1';
 
     const response = {
@@ -156,84 +153,15 @@ app.get('/api/signinSaltGen', validateToken, async (req, res) => {
         "username": process.env.REACT_APP_API_USER ? process.env.REACT_APP_API_USER : apiUsername
     };
 
-    console.log('response to send', response);
-    console.log('\n\n!! ENVIRONMENT VARIABLES UPDATED !!\n!! PLEASE RESTART SERVER !!\n\n');
+    // Save new sale to current instance's Environment Variables and send response
+    process.env['ACCESS_TOKEN_SIGNIN_SALT'] = salt;
 
     res.send(response);
-
-    // bcrypt.genSalt(saltRounds, salt => {
-    //     console.log('salt', salt);
-    //     const response = {
-    //         "salt": salt,
-    //         "username": process.env.REACT_APP_API_USER ? process.env.REACT_APP_API_USER : 'api_user_1'
-    //     };
-    //     console.log('response to send', response);
-    //     res.send(response);
-    // })
-
-    // const dbConnect = async () => {
-    //     return await getConnection();
-    // };
-    //
-    // dbConnect().then(connection => {
-    //     connection.query(`SELECT * FROM ${DB_PREFIX}api WHERE username = '${req.body.user}'`, async (err, rows) => {
-    //         if (err) {
-    //             res.status(err.status || 500);
-    //             const errRes = {
-    //                 "success": false,
-    //                 "message": err.sqlMessage ? `Database Error: ${err.sqlMessage}` : 'Database Error. Please check your request or contact the system administrator.',
-    //                 "errno": err.errno ? err.errno : "0", // just defaulting to 0 for now
-    //                 "error": err,
-    //                 "request": {
-    //                     "method": req.method,
-    //                     "url": req.url,
-    //                 },
-    //                 "data": {}
-    //             };
-    //             res.send(errRes);
-    //             return;
-    //         }
-    //
-    //         if (rows.length === 0) {
-    //             res.status(404).send('User does not exist')
-    //             return;
-    //         }
-    //
-    //         // get access token and refresh token
-    //         if (await bcrypt.compare(req.body.password, rows[0].password)) {
-    //             const accessToken = generateAccessToken({user: req.body.name});
-    //             const refreshToken = generateRefreshToken({user: req.body.name});
-    //             refreshTokens.push(refreshToken);
-    //
-    //             res.json({accessToken: accessToken, refreshToken: refreshToken});
-    //         } else {
-    //             res.status(401).send('Password Incorrect!');
-    //         }
-    //     });
-    // });
-});
-
-
-app.get('/signingentest1', validateToken, (req, res) => {
-    const testRes = {
-        "username": process.env.REACT_APP_API_USER ? process.env.REACT_APP_API_USER : 'api_user_1',
-        "status_code": req.statusCode ? req.statusCode : "1",
-        "status_message": req.statusMessage ? req.statusMessage : "Successful",
-        "request": {
-            "method": req.method,
-            "url": req.url,
-        },
-        "data": {
-            "employee_name": "Mister Ed",
-            "employee_id": 1
-        }
-    };
-    res.send(testRes);
 });
 
 // Whitelist
 const validIps = ['::12', '127.0.0.1']; // Put your IP whitelist in this array
-app.use(IpFilter(validIps));
+await app.use(IpFilter(validIps));
 
 app.listen(PORT, () => {
     console.log(`Authorization Server running on port ${PORT}...`)

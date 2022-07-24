@@ -18,7 +18,7 @@ The authentication and validation servers are run seperatly on seperate ports.
 
 The installation script will install all dependencies for both the frontend and backend.
 
-To install the required dependencies:
+To install the required dependencies and get the backend app running:
 
 * Clone git repo
 * Make sure latest node, npm, and yarn are installed
@@ -27,6 +27,17 @@ To install the required dependencies:
 * Create a `.env` file in `./backend` with the required environment variables. (see example below)
 * Use `database.sql` to create MySQL database tables with default public API username and password.
 * Start the Express.js backend server from the command line: `npm "start backend"`
+* Send GET request to `/api/signinSaltGen` to obtain <u>secret</u> salt
+* Copy the salt you received from `/api/signinSaltGen` to the `ACCESS_TOKEN_SIGNIN_SALT` key 
+  in the frontend `.env` file.
+
+   `ACCESS_TOKEN_SIGNIN_SALT=[Salt goes here]`
+
+* Copy the public API username you received from `/api/signinSaltGen` to the `REACT_APP_API_USER` key 
+  in the frontend `.env` file.
+
+  `ACCESS_TOKEN_SIGNIN_SALT=[Salt goes here]`
+
 * Start the React frontend server from the command line: `npm "start frontend"`
 
 ### Environment Variables .env file
@@ -175,7 +186,7 @@ Use the API Calls listed below to see your REST API in action.
 
 ## Available API Calls
 
-Please see `./backend/README.md` for a list of available API calls you can make to the backend.
+Please see [./backend/README.md](./backend/README.md) for a list of available API calls you can make to the backend.
 
 <hr>
 
